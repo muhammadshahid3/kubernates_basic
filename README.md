@@ -147,3 +147,38 @@ Pod (label: app=rocket-service, container port 80 par sun raha hai)
 ```
 
 Koi specific line abhi bhi confusing lage to bata do, us par aur deep jaunga.
+
+
+
+apiVersion: apps/v1                          # apps/v1 API group ki resource hai
+kind: Deployment                              # Deployment type ki resource bana rahe hain
+
+metadata:                                     # Deployment ki apni identity
+  name: {{ .Values.name }}                    # → rocket-service
+  namespace: {{ .Values.namespace }}          # → rocket
+  labels:
+    app: {{ .Values.name }}                   # Deployment par tag/label
+
+spec:                                         # ab batayenge Deployment ko kya karna hai
+  replicas: {{ .Values.replicaCount }}        # → 1 (kitne pod copies chalengi)
+
+  selector:                                   # Deployment kaunse pods manage karega
+    matchLabels:
+      app: {{ .Values.name }}                 # jin pods par ye label ho, wo iske hain
+
+  template:                                   # pod banane ka blueprint
+    metadata:
+      labels:
+        app: {{ .Values.name }}               # naye pod par yehi label lagegi
+    spec:
+      containers:
+        - name: {{ .Values.name }}            # container ka naam
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          # → shahiddevops1/rocket-site:latest
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # → Always (har baar fresh image pull karo)
+          ports:
+            - name: http                      # port ka naam (Service isse match karegi)
+              containerPort: {{ .Values.service.port }}
+              # → 80 (nginx isi port par sun raha hai)
+              protocol: TCP
