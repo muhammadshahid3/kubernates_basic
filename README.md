@@ -1,6 +1,6 @@
 # Rocket Service — Kubernetes Helm Chart Documentation
 
-This document explains the Kubernetes **Deployment** and **Service** manifests used to deploy the `rocket-service` application. Both files are Helm templates, meaning values like name, namespace, image, and ports are injected from `values.yaml`.
+Ye document `rocket-service` application ke liye use hone wale **Deployment** aur **Service** Kubernetes manifests ko explain karta hai. Dono files Helm templates hain, matlab name, namespace, image, aur ports jaisi values `values.yaml` se inject hoti hain.
 
 ---
 
@@ -18,8 +18,8 @@ This document explains the Kubernetes **Deployment** and **Service** manifests u
 
 | Resource   | API Group | Purpose                                                        |
 |------------|-----------|------------------------------------------------------------------|
-| Deployment | `apps/v1` | Manages pod lifecycle — creation, scaling, restarts, rollouts   |
-| Service    | `v1`      | Provides a stable network endpoint to route traffic to pods     |
+| Deployment | `apps/v1` | Pods ka lifecycle manage karta hai — creation, scaling, restarts, rollouts |
+| Service    | `v1`      | Pods tak stable network endpoint deta hai taake traffic route ho sake |
 
 ---
 
@@ -29,7 +29,7 @@ This document explains the Kubernetes **Deployment** and **Service** manifests u
 apiVersion: apps/v1
 kind: Deployment
 ```
-Declares this resource as a **Deployment**, which belongs to the `apps/v1` API group (unlike `Pod` and `Service`, which live in the core `v1` group). A Deployment's job is to manage pods: how many should run, recreate them on crash, and handle updates/rollbacks.
+Ye batata hai ke resource **Deployment** hai, jo `apps/v1` API group mein aata hai (jabke `Pod` aur `Service` core `v1` group mein aate hain). Deployment ka kaam hai pods manage karna: kitne chalne hain, crash hone par dobara banana, aur update/rollback handle karna.
 
 ```yaml
 metadata:
@@ -40,22 +40,22 @@ metadata:
 ```
 | Field       | Resolved Value    | Description                                              |
 |-------------|--------------------|------------------------------------------------------------|
-| `name`      | `rocket-service`   | The Deployment's identity (visible via `kubectl get deployment`) |
-| `namespace` | `rocket`           | The namespace this Deployment is created in               |
-| `labels`    | `app: rocket-service` | An organizational tag on the Deployment object itself (used for filtering, e.g. `kubectl get deploy -l app=rocket-service`). Does **not** affect the pods. |
+| `name`      | `rocket-service`   | Deployment ki identity (`kubectl get deployment` se dikhegi) |
+| `namespace` | `rocket`           | Wo namespace jahan ye Deployment banta hai                |
+| `labels`    | `app: rocket-service` | Deployment object par lagi organizational tag (filtering ke liye, jaise `kubectl get deploy -l app=rocket-service`). Iska pods par koi asar nahi hota. |
 
 ```yaml
 spec:
   replicas: {{ .Values.replicaCount }}
 ```
-Specifies how many identical pods should run. Currently set to `1`. Increasing this (e.g. to `3`) would make Kubernetes run 3 identical pods for load balancing and high availability.
+Batata hai ke kitne identical pods chalne chahiye. Filhal `1` set hai. Isko badha kar (jaise `3`) karne se Kubernetes 3 identical pods chala dega — load balancing aur high availability ke liye.
 
 ```yaml
   selector:
     matchLabels:
       app: {{ .Values.name }}
 ```
-Tells the Deployment which pods belong to it: any pod carrying the label `app: rocket-service` is considered "mine" and will be managed by this Deployment. This is the link between the Deployment and its pods.
+Deployment ko batata hai ke kaunse pods uske hain: jis bhi pod par label `app: rocket-service` lagi ho, wo Deployment ke control mein aayega. Ye Deployment aur uske pods ke darmiyan ka connection hai.
 
 ```yaml
   template:
@@ -63,7 +63,7 @@ Tells the Deployment which pods belong to it: any pod carrying the label `app: r
       labels:
         app: {{ .Values.name }}
 ```
-This is the **pod blueprint**. Whenever the Deployment needs to create a pod (first launch, crash recovery, scale-up), it copies this template. The label applied here (`app: rocket-service`) matches the `selector.matchLabels` above, which is how the Deployment recognizes its own pods.
+Ye **naye pod ka blueprint** hai. Jab bhi Deployment ko pod banana ho (pehli baar, crash ke baad, scale-up mein), isi template ko copy karke pod banayega. Yahan lagayi gayi label (`app: rocket-service`) upar wale `selector.matchLabels` se match karti hai — isi wajah se Deployment apne pods ko pehchan leta hai.
 
 ```yaml
     spec:
@@ -74,9 +74,9 @@ This is the **pod blueprint**. Whenever the Deployment needs to create a pod (fi
 ```
 | Field              | Resolved Value                          | Description                                            |
 |--------------------|-------------------------------------------|------------------------------------------------------|
-| `name`             | `rocket-service`                        | Name of the container inside the pod                  |
-| `image`            | `shahiddevops1/rocket-site:latest`      | Docker image pulled and run for this container         |
-| `imagePullPolicy`  | `Always`                                | Forces a fresh image pull on every pod creation, ensuring the latest version is used |
+| `name`             | `rocket-service`                        | Pod ke andar container ka naam                        |
+| `image`            | `shahiddevops1/rocket-site:latest`      | Wo Docker image jo pull karke chalayi jayegi           |
+| `imagePullPolicy`  | `Always`                                | Har baar pod banate waqt fresh image pull karo, taake latest version mile |
 
 ```yaml
           ports:
@@ -84,7 +84,7 @@ This is the **pod blueprint**. Whenever the Deployment needs to create a pod (fi
               containerPort: {{ .Values.service.port }}
               protocol: TCP
 ```
-Declares the port the application listens on inside the container (nginx listens on `80`). This is purely **informational/documentation** for Kubernetes — it does not open or block the port. Whether the container actually listens on that port depends entirely on the image's own configuration (e.g. its Dockerfile).
+Batata hai ke app container ke andar kis port par sun rahi hai (nginx port `80` par listen karta hai). Ye sirf **documentation/info** ke liye hai — port ko actually open ya block ye line nahi karti. Container us port par listen karega ya nahi, ye image ke Dockerfile par depend karta hai.
 
 ---
 
@@ -94,7 +94,7 @@ Declares the port the application listens on inside the container (nginx listens
 apiVersion: v1
 kind: Service
 ```
-Services belong to the core `v1` API group. A Service's job is to give pods a **stable network address**. Pods are ephemeral (they get new names/IPs when recreated), but a Service keeps a fixed name/IP that other components can rely on.
+Service core `v1` API group mein aati hai. Service ka kaam hai pods ko **stable network address** dena. Pods create/delete hote rehte hain (naye naam, naye IP milte hain), lekin Service ka apna fixed naam/IP hamesha wahi rehta hai jisse traffic bheja ja sakta hai.
 
 ```yaml
 metadata:
@@ -103,44 +103,44 @@ metadata:
   labels:
     app: {{ .Values.name }}
 ```
-Same pattern as the Deployment: the Service's name, namespace, and its own organizational label.
+Same pattern jaisa Deployment mein tha — Service ka naam, namespace, aur uski apni organizational label.
 
 ```yaml
 spec:
   type: {{ .Values.service.type }}
 ```
-Defines how the Service is exposed. `ClusterIP` means it is **only reachable from within the cluster** — not from outside. This is why external access requires `kubectl port-forward`.
+Batata hai ke Service kaise expose hogi. `ClusterIP` ka matlab hai ye sirf **cluster ke andar hi accessible** hai — bahar se nahi. Isi wajah se bahar se access ke liye `kubectl port-forward` karna padta hai.
 
 | Service Type   | Accessibility                                              |
 |-----------------|-------------------------------------------------------------|
-| `ClusterIP`     | Internal cluster access only (default)                     |
-| `NodePort`      | Accessible externally via node IP + a fixed port            |
-| `LoadBalancer`  | Provisions an external cloud load balancer                  |
+| `ClusterIP`     | Sirf cluster ke andar se access (default)                  |
+| `NodePort`      | Node ke IP + fixed port ke zariye bahar se access           |
+| `LoadBalancer`  | Cloud ka external load balancer provision karta hai         |
 
 ```yaml
   ports:
     - port: {{ .Values.service.port }}
 ```
-The port on which the **Service itself** is available inside the cluster. Any pod sending a request to `rocket-service:<port>` will hit this port.
+Ye wo port hai jis par **Service khud** cluster ke andar available hoti hai. Koi bhi pod `rocket-service:<port>` par request bhejega to yehi port hit hoga.
 
 ```yaml
       targetPort: http
 ```
-Defines which port **inside the pod** the request should be forwarded to. Here it references the name `http`, matching the `name: http` given to `containerPort` in the Deployment — Kubernetes resolves the name to the actual port number.
+Batata hai ke request ko **pod ke andar kis port** par forward karna hai. Yahan naam `http` diya gaya hai jo Deployment ke `containerPort` ki `name: http` se match karta hai — Kubernetes is naam ko resolve karke actual port number nikal leta hai.
 
-> ⚠️ **Root cause of the original issue:** `service.port` in `values.yaml` was set to `8000`, but the container was actually listening on port `80`. This mismatch caused traffic forwarding to fail with a connection-refused error.
+> ⚠️ **Asal masle ki wajah:** `values.yaml` mein `service.port` ko `8000` set kiya gaya tha, lekin container asal mein port `80` par listen kar raha tha. Isi mismatch ki wajah se traffic forward nahi ho pa raha tha aur connection-refused error aa raha tha.
 
 ```yaml
       protocol: TCP
       name: http
 ```
-The protocol is `TCP` (HTTP itself runs over TCP), and this port entry is named `http`.
+Protocol `TCP` hai (HTTP bhi TCP par hi chalta hai), aur is port entry ka naam `http` hai.
 
 ```yaml
   selector:
     app: {{ .Values.name }}
 ```
-**The most important line in the Service.** A Service does not serve traffic itself — it acts as a router. It says: "send traffic to any pod labeled `app: rocket-service`." This is how the Service discovers which pod(s) to route to, regardless of how many times those pods restart or get replaced — as long as the label matches, the Service finds them.
+**Service ki sabse important line.** Service khud koi traffic serve nahi karti — ye ek router ki tarah kaam karti hai. Ye kehti hai: "jis bhi pod par label `app: rocket-service` lagi hai, usko traffic bhejo." Yehi mechanism hai jisse Service ko pata chalta hai ke traffic kis pod(s) tak pahunchana hai — chahe pods kitni bhi baar restart/replace hon, jab tak label same hai, Service unhe dhoond legi.
 
 ---
 
@@ -151,56 +151,56 @@ Client
   │
   ▼
 Service (port 8000/80 → selector: app=rocket-service)
-  │  resolves selector to matching pods
+  │  selector se matching pods dhoondti hai
   ▼
-Pod (label: app=rocket-service, container listening on port 80)
+Pod (label: app=rocket-service, container port 80 par sun raha hai)
 ```
 
 ---
 
 ## Known Issue & Fix
 
-**Symptom:** Connection refused when accessing the service.
+**Symptom:** Service access karte waqt connection refused aata tha.
 
-**Cause:** `service.port` (`8000`) did not correspond to the actual port the container was listening on (`80`), and/or `targetPort` was not correctly resolving to the container's port.
+**Wajah:** `service.port` (`8000`) container ke actual listening port (`80`) se match nahi kar raha tha, aur/ya `targetPort` sahi tarah resolve nahi ho raha tha.
 
-**Fix:** Ensure `targetPort` in the Service matches the `containerPort` (or its `name`) defined in the Deployment, so traffic is correctly forwarded from the Service to the pod's actual listening port.
+**Fix:** Ensure karo ke Service ka `targetPort`, Deployment mein diye gaye `containerPort` (ya uske `name`) se match kare, taake traffic Service se pod ke asal listening port tak sahi tarah forward ho sake.
 
 ---
 
 ## Full Annotated Deployment Reference
 
 ```yaml
-apiVersion: apps/v1                          # apps/v1 API group resource
-kind: Deployment                              # Creating a Deployment resource
+apiVersion: apps/v1                          # apps/v1 API group ki resource
+kind: Deployment                              # Deployment resource bana rahe hain
 
-metadata:                                     # Deployment's own identity
+metadata:                                     # Deployment ki apni identity
   name: {{ .Values.name }}                    # → rocket-service
   namespace: {{ .Values.namespace }}          # → rocket
   labels:
-    app: {{ .Values.name }}                   # Tag/label on the Deployment
+    app: {{ .Values.name }}                   # Deployment par tag/label
 
-spec:                                         # What the Deployment should do
-  replicas: {{ .Values.replicaCount }}        # → 1 (number of pod copies)
+spec:                                         # Deployment ko kya karna hai
+  replicas: {{ .Values.replicaCount }}        # → 1 (kitne pod copies chalengi)
 
-  selector:                                   # Which pods this Deployment manages
+  selector:                                   # Deployment kaunse pods manage karega
     matchLabels:
-      app: {{ .Values.name }}                 # Pods with this label belong to it
+      app: {{ .Values.name }}                 # Jin pods par ye label ho, wo iske hain
 
-  template:                                   # Blueprint for creating pods
+  template:                                   # Pod banane ka blueprint
     metadata:
       labels:
-        app: {{ .Values.name }}               # Label applied to new pods
+        app: {{ .Values.name }}               # Naye pod par yehi label lagegi
     spec:
       containers:
-        - name: {{ .Values.name }}            # Container name
+        - name: {{ .Values.name }}            # Container ka naam
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           # → shahiddevops1/rocket-site:latest
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # → Always (pull a fresh image every time)
+          # → Always (har baar fresh image pull karo)
           ports:
-            - name: http                      # Port name (matched by the Service)
+            - name: http                      # Port ka naam (Service isse match karegi)
               containerPort: {{ .Values.service.port }}
-              # → 80 (nginx listens on this port)
+              # → 80 (nginx isi port par sun raha hai)
               protocol: TCP
 ```
